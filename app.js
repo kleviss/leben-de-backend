@@ -117,13 +117,13 @@ const html = `
     </style>
   </head>
   <body>
-    <section>
+    <section style="text-align: center;">
       Leben in DEUTSCHLAND 🇩🇪 <br>
       <h6>Backend server is running!</h6>
     </section>
   </body>
-    <footer>
-        <p>Backend server is running!</p>
-      </footer>
+    <footer style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center; width: 100%;">
+      <p style="font-size: 0.2rem; color: #888;">Created for fun 💸 by <a href="https://github.com/kleviss" target="_blank">clevsxh</a></p>
+    </footer>
 </html>
 `;
