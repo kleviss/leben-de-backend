@@ -8,10 +8,11 @@ const mongoose = require('mongoose');
  * @description: String
  */
 const categorySchema = new mongoose.Schema({
-  name: String,
+  _id: { type: String, required: true },
+  name: { type: String, required: true },
+  description: { type: String, required: true },
   label: String,
   img: String,
-  description: String,
 });
 
 const Category = mongoose.model('Category', categorySchema, 'categories');
