@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { Category } = require('../models/Category');
-const mongoose = require('mongoose');
 const slugify = require('slugify');
+const upload = require('../middleware/uploadImage');
 
 // GET ALL
 router.get('/', async (req, res, next) => {
@@ -14,40 +14,24 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// POST
-router.post('/:category', async (req, res, next) => {
-  try {
-    const { category } = req.params;
-    const newQuestion = req.body;
-
-    const updatedCategory = await Category.findOneAndUpdate(
-      { category },
-      {
-        $push: { questions: newQuestion },
-        $inc: { questionsNumber: 1 },
-      },
-      { new: true, upsert: true }
-    );
-
-    res.status(201).json(updatedCategory);
-  } catch (error) {
-    next(error);
-  }
-});
-
 // CREATE
-router.post('/', async (req, res, next) => {
+router.post('/', upload.single('image'), async (req, res, next) => {
   try {
-    const newCategory = req.body;
+    const { name, description, label } = req.body;
+    const imageUrl = req.file ? req.file.location : null;
 
-    // Generate _id from the name
-    newCategory._id = slugify(newCategory.name, { lower: true, strict: true });
+    const newCategory = {
+      _id: slugify(name, { lower: true, strict: true }),
+      name,
+      description,
+      label,
+      imageUrl,
+    };
 
     const createdCategory = await Category.create(newCategory);
     res.status(201).json(createdCategory);
   } catch (error) {
     if (error.code === 11000) {
-      // Duplicate key error
       res.status(400).json({ message: 'A category with this name already exists' });
     } else {
       next(error);
@@ -56,19 +40,33 @@ router.post('/', async (req, res, next) => {
 });
 
 // PATCH
-router.patch('/:identifier', async (req, res, next) => {
+router.patch('/:identifier', upload.single('image'), async (req, res, next) => {
   try {
     const { identifier } = req.params;
-    let query = { _id: identifier };
+    const updateData = req.body;
 
-    const updatedCategory = await Category.findOneAndUpdate(query, req.body, { new: true });
+    console.log('Request file:', req.file); // Log the file object
+
+    if (req.file && req.file.key) {
+      updateData.imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${req.file.key}`;
+    }
+
+    console.log('Update data:', updateData);
+
+    const updatedCategory = await Category.findOneAndUpdate({ _id: identifier }, updateData, {
+      new: true,
+    });
 
     if (!updatedCategory) {
       return res.status(404).json({ message: 'Category not found' });
     }
     res.json(updatedCategory);
   } catch (error) {
-    next(error);
+    console.error('Error updating category:', error);
+    console.error('Error stack:', error.stack);
+    res
+      .status(500)
+      .json({ message: 'An error occurred while updating the category', error: error.message });
   }
 });
 
