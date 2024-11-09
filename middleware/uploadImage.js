@@ -10,17 +10,26 @@ const s3Client = new S3Client({
   },
 });
 
-const upload = multer({
-  storage: multerS3({
-    s3: s3Client,
-    bucket: process.env.AWS_BUCKET_NAME,
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: function (req, file, cb) {
-      cb(null, 'category-images/' + Date.now().toString() + '-' + file.originalname);
-    },
-  }),
-});
+// Create a function that returns configured multer middleware
+const createUploader = (folderPath) => {
+  return multer({
+    storage: multerS3({
+      s3: s3Client,
+      bucket: process.env.AWS_BUCKET_NAME,
+      metadata: function (req, file, cb) {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: function (req, file, cb) {
+        cb(null, `${folderPath}/` + Date.now().toString() + '-' + file.originalname);
+      },
+    }),
+  });
+};
 
-module.exports = upload;
+// Create specific uploaders for different purposes
+const uploaders = {
+  category: createUploader('category-images'),
+  question: createUploader('question-images'),
+};
+
+module.exports = uploaders;

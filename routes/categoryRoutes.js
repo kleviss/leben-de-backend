@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Category } = require('../models/Category');
 const slugify = require('slugify');
-const upload = require('../middleware/uploadImage');
+const uploaders = require('../middleware/uploadImage');
 
 // GET ALL
 router.get('/', async (req, res, next) => {
@@ -15,7 +15,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // CREATE
-router.post('/', upload.single('image'), async (req, res, next) => {
+router.post('/', uploaders.category.single('image'), async (req, res, next) => {
   try {
     const { name, description, label } = req.body;
     const imageUrl = req.file ? req.file.location : null;
@@ -40,7 +40,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
 });
 
 // PATCH
-router.patch('/:identifier', upload.single('image'), async (req, res, next) => {
+router.patch('/:identifier', uploaders.category.single('image'), async (req, res, next) => {
   try {
     const { identifier } = req.params;
     const updateData = req.body;
